@@ -1,0 +1,13 @@
+web_crawler.py
+ttt.py
+main2.py
+main1.py
+database.py
+.streamlit/
+.env
+venv/
+__pycache__
+export.xlsx
+.~lock.export.xlsx#
+test2.ipynb
+instructioncopy.py
