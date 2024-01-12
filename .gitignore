@@ -3,7 +3,7 @@ ttt.py
 main2.py
 main1.py
 database.py
-.streamlit/
+.streamlit/secrets.toml
 .env
 venv/
 __pycache__
