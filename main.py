@@ -2,6 +2,9 @@ import streamlit as st
 from streamlit_tags import st_tags
 from content_updater import crawl_data,content_cleaner_and_content_enhancer,extract_keywords_from_excel
 import time
+import os
+os.system("playwright install")
+
 st.title("Blog Enhancer")
 if "spinner_status" not in st.session_state:
     st.session_state.spinner_status ="Initializing ..."
