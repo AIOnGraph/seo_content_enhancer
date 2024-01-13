@@ -32,7 +32,7 @@ def func():
         my_bar.progress(10,text="crawling start....")
         scrap_content_response=crawl_data(url_input_1)
         my_bar.progress(20,text=st.session_state.spinner_status)
-        if scrap_content_response[0].page_content:
+        if scrap_content_response:
             my_bar.progress(25,text="Cleaning Content ...")
             response=content_cleaner_and_content_enhancer(scrap_content_response,list_keyword,my_bar)
             time.sleep(0.5)
