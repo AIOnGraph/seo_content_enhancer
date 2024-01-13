@@ -28,16 +28,18 @@ def clean_content_data(response_after_scrapping):
 
 def crawl_data(url):
     print("Extracting blog from url")
-    loader = AsyncChromiumLoader([url])
-    html = loader.load()
-    tags_to_extract=["p","h1", "h2", "h3","span"]
-    
-    bs_transformer = BeautifulSoupTransformer()
-    
-    docs_transformed = bs_transformer.transform_documents(html,tags_to_extract=tags_to_extract)
-        
+    # loader = AsyncChromiumLoader([url])
+    # html = loader.load()
+    # tags_to_extract=["p","h1", "h2", "h3","span"]
+    # bs_transformer = BeautifulSoupTransformer()
+    # docs_transformed = bs_transformer.transform_documents(html,tags_to_extract=tags_to_extract)
+    response = requests.get(url)
+    html_content = response.text
+    soup = BeautifulSoup(html_content, 'html.parser')
+    page_text = soup.get_text()
+    remove_extraline_from_content = "\n".join(line.strip() for line in page_text.splitlines() if line.strip())
     st.session_state.spinner_status="crawling done"
-    return docs_transformed
+    return remove_extraline_from_content
 
 
 
