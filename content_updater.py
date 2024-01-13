@@ -10,6 +10,8 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 import re
+import requests
+from bs4 import BeautifulSoup
 
 OPEN_AI_API=st.secrets['OPENAI_API_KEY']
 
