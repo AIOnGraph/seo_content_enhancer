@@ -1,5 +1,3 @@
-from langchain_community.document_loaders import AsyncChromiumLoader
-from langchain_community.document_transformers import BeautifulSoupTransformer
 from instruction import instruction_For_Bot,instruction_For_Bot_2,instruction_for_cleaning,test_instruction_for_enhancing_blog
 from langchain.schema import HumanMessage, SystemMessage
 from langchain.chat_models import ChatOpenAI
@@ -16,6 +14,8 @@ from bs4 import BeautifulSoup
 OPEN_AI_API=st.secrets['OPENAI_API_KEY']
 
 
+
+
 class ContentEnhancer(BaseModel):
     changed_content: str = Field(description="thid field contains the updated content")
 
@@ -30,31 +30,28 @@ def clean_content_data(response_after_scrapping):
 
 def crawl_data(url):
     print("Extracting blog from url")
-    # loader = AsyncChromiumLoader([url])
-    # html = loader.load()
-    # tags_to_extract=["p","h1", "h2", "h3","span"]
-    # bs_transformer = BeautifulSoupTransformer()
-    # docs_transformed = bs_transformer.transform_documents(html,tags_to_extract=tags_to_extract)
-    response = requests.get(url)
-    html_content = response.text
-    soup = BeautifulSoup(html_content, 'html.parser')
-    page_text = soup.get_text()
-    remove_extraline_from_content = "\n".join(line.strip() for line in page_text.splitlines() if line.strip())
-    st.session_state.spinner_status="crawling done"
-    return remove_extraline_from_content
-
-
-
-def extract_keywords_from_excel(fileName):
+    try:
+        response = requests.get(url)
+        html_content = response.text
+        soup = BeautifulSoup(html_content, 'html.parser')
+        page_text = soup.get_text()
+        remove_extraline_from_content = "\n".join(line.strip() for line in page_text.splitlines() if line.strip())
+        st.session_state.spinner_status="crawling done"
+        return remove_extraline_from_content
+    except Exception as e:
+        return None
+        
+   
+def extract_keywords_from_excel(fileName,keyword_difficulty_score,keyword_volume_score):
     try: 
         data=pd.read_excel(fileName)
-        suggestion_data=list(data["Keyword"])
-        filtered_data = data[(data['Keyword Difficulty'] < 50) & (data['Volume'] > 30)]
-        keywords_list=list(filtered_data["Keyword"])
+        suggestion_data=data["Keyword"]
+        filtered_data = data[(data['Keyword Difficulty'] < keyword_difficulty_score) & (data['Volume'] > keyword_volume_score)]
+        keywords_list=filtered_data["Keyword"]
         
-        return keywords_list,suggestion_data
-    except Exception as e:
-        return list(e)
+        return [list(keywords_list),list(suggestion_data)]
+    except KeyError as e:
+        return None
 
 def compare_contents(blog_1_content,blog_2_content):
     user_data = f"""First Blog is {blog_1_content},Second Blog {blog_2_content}
@@ -139,11 +136,12 @@ def content_cleaner_and_content_enhancer(user_data_for_cleaning,keywords_list,my
     
     
     #llm model
-    llm_model = ChatOpenAI(model="gpt-4-0613",temperature=0.2,api_key=OPEN_AI_API)
+    llm_model = ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API)
     #chain
     clean_content_chain=LLMChain(llm=ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API),prompt=clean_content_template,verbose=True)
    
     cleaned_content=clean_content_chain.run(instruction_for_cleaning=instruction_for_cleaning,user_data_for_cleaning=user_data_for_cleaning)
+
     st.session_state.spinner_status="Content Cleaned"
     my_bar.progress(50,text=st.session_state.spinner_status)
     user_data_for_enhancing =f"""Blog Content = {cleaned_content} and keyword_list={keywords_list}"""  
@@ -152,7 +150,7 @@ def content_cleaner_and_content_enhancer(user_data_for_cleaning,keywords_list,my
     
     st.session_state.spinner_status="Content Updating ..."
     my_bar.progress(60,text=st.session_state.spinner_status)
-    l=enhance_content_chain.stream({"test_instruction_for_enhancing_blog": test_instruction_for_enhancing_blog,"user_data_for_enhancing":user_data_for_enhancing})
-    return l
+    stream_object=enhance_content_chain.stream({"test_instruction_for_enhancing_blog": test_instruction_for_enhancing_blog,"user_data_for_enhancing":user_data_for_enhancing})
+    return stream_object
 
        
