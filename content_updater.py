@@ -136,7 +136,7 @@ def content_cleaner_and_content_enhancer(user_data_for_cleaning,keywords_list,my
     
     
     #llm model
-    llm_model = ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API)
+    llm_model = ChatOpenAI(model="gpt-4-0613",temperature=0.2,api_key=OPEN_AI_API)
     #chain
     clean_content_chain=LLMChain(llm=ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API),prompt=clean_content_template,verbose=True)
    
