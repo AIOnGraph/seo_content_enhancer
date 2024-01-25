@@ -131,15 +131,16 @@ def content_cleaner_and_content_enhancer(blog_content_from_db,user_data_for_clea
         
         parser = JsonOutputParser(pydantic_object=ContentEnhancer)
 
-        
-        enhance_content_template=PromptTemplate(input_variables=["test_instruction_for_enhancing_blog","user_data_for_enhancing"],template="{test_instruction_for_enhancing_blog} {user_data_for_enhancing}",partial_variables={"format_instructions": parser.get_format_instructions()})
-        
-        #llm model
-        llm_model = ChatOpenAI(model="gpt-4-0613",temperature=0.2,api_key=OPEN_AI_API)
-        #chain
-        clean_content_chain=LLMChain(llm=ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API),prompt=clean_content_template)
     
-        cleaned_content=clean_content_chain.run(instruction_for_cleaning=instruction_for_cleaning,user_data_for_cleaning=user_data_for_cleaning)
+    enhance_content_template=PromptTemplate(input_variables=["test_instruction_for_enhancing_blog","user_data_for_enhancing"],template="{test_instruction_for_enhancing_blog} {user_data_for_enhancing}",partial_variables={"format_instructions": parser.get_format_instructions()})
+    
+    
+    #llm model
+    llm_model = ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API)
+    #chain
+    clean_content_chain=LLMChain(llm=ChatOpenAI(model="gpt-3.5-turbo-1106",temperature=0.2,api_key=OPEN_AI_API),prompt=clean_content_template,verbose=True)
+   
+    cleaned_content=clean_content_chain.run(instruction_for_cleaning=instruction_for_cleaning,user_data_for_cleaning=user_data_for_cleaning)
 
         st.session_state.spinner_status="Content Cleaned"
         my_bar.progress(50,text=st.session_state.spinner_status)
