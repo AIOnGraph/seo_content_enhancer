@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_tags import st_tags
 from content_updater import crawl_data,content_cleaner_and_content_enhancer,extract_keywords_from_excel
 import time
+from blogs_db_storage import get_content_from_database,process_to_store_data
 
 st.markdown("""
     <style>
@@ -18,10 +19,9 @@ if "spinner_status" not in st.session_state:
 if "keyword_list" not in st.session_state:
     st.session_state.keyword_list =[]
     
-home,secrets  = st.tabs(["HOME",'Secret Key'])
+home,upload_data,secrets  = st.tabs(["**HOME**",'**Upload Data**','**Secret Key**'])
 
 with st.sidebar:
-    
     
     keyword_difficulty_score=st.slider("**Keyword Difficulty Score**", 0, 100,value=50)
     keyword_volume_score=st.slider("**Keyword Volume Score**", 0, 100 ,value=30)
@@ -43,17 +43,25 @@ with st.sidebar:
     
 
 def func():
-    url_input_1 = st.text_input(label="Extract Data",placeholder='Paste Blog Url Here',key="text_input_1")
+    update_content_only=None
+    url_input_1 = st.text_input(label="Extract Data",placeholder='Paste Blog Url Here',key="text_input_1",label_visibility="collapsed")
     if st.button("Start Updating Blog",key="Blog_Updater"):
         if st.session_state.tokken == st.secrets['TOKKEN']:
-            if st.session_state.keyword_list:    
+            if st.session_state.keyword_list:
                 my_bar=st.progress(0,text=st.session_state.spinner_status)
-                my_bar.progress(10,text="crawling start....")
-                scrap_content_response=crawl_data(url_input_1)
-                my_bar.progress(20,text=st.session_state.spinner_status)
-                if scrap_content_response:
-                    my_bar.progress(25,text="Cleaning Content ...")
-                    response=content_cleaner_and_content_enhancer(scrap_content_response,list_keyword,my_bar)
+                blog_content_from_db=get_content_from_database(url_input_1,my_bar)
+                scrap_content_response=None
+                if   blog_content_from_db:
+                    my_bar=my_bar.progress(20,text=st.session_state.spinner_status)
+                    update_content_only=True
+                else :
+                    my_bar.progress(12,text="crawling start....")
+                    scrap_content_response=crawl_data(url_input_1)
+                    my_bar.progress(20,text=st.session_state.spinner_status)
+                    update_content_only=False
+                           
+                if blog_content_from_db or scrap_content_response :
+                    response=content_cleaner_and_content_enhancer(blog_content_from_db,scrap_content_response,list_keyword,my_bar,update_content_only)
                     time.sleep(0.5)
                     with st.container(border=True):
                         my_bar.progress(90,text="Writing ..")    
@@ -79,7 +87,7 @@ def func():
 if __name__=="__main__":
 
     with secrets: 
-        tokken=st.text_input("ENTER YOUR TOKEN",type="password")
+        tokken=st.text_input(label="ENTER YOUR TOKEN",placeholder="ENTER YOUR TOKEN",type="password",label_visibility="collapsed")
         st.session_state.tokken=tokken
         if st.session_state.tokken is None or st.session_state.tokken=="" :
             st.warning('Please enter token in secret tab!!!',icon="⚠️")
@@ -90,7 +98,30 @@ if __name__=="__main__":
             st.warning(":green[**Verified Succesfully**] ")
     with home:
         func()
+    with upload_data:
+        url=st.text_input(label="**Enter URL**",placeholder="Enter URL to Upload",label_visibility="collapsed",key="url_uploader_input")
+        if st.button("Upload"):
+            if st.session_state.tokken == st.secrets['TOKKEN']:
+                my_bar=st.progress(0,text="Initializing")
+                response=process_to_store_data(url,my_bar)
+                if response:
+                    st.warning(response)
+            else:
+                st.error('Please enter token in secret tab!!!',icon="🚨" )
+                    
+                
+            
+                
+        
+        
+        
 
+          
+               
+        
+                
+            
+   
           
                
         

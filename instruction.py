@@ -29,6 +29,11 @@ instruction_for_cleaning="""you will act as a content text cleaner.
         you have to remove the data which does not belong to the blog topic or context.
         you will return the clean blog in response. 
         """
+instruction_for_cleaning_test="""you will act as a content text cleaner.
+        User will provide you a blog content which is scaped from a html page.It contain some unwanted text.
+        you have to remove that text and data which does not belong to the blog context.
+        you will return the clean blog in response. 
+        """
 
 
 
