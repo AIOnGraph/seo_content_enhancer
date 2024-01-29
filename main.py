@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_tags import st_tags
 from content_updater import crawl_data,content_cleaner_and_content_enhancer,extract_keywords_from_excel
 import time
-from blogs_db_storage import get_content_from_database,process_to_store_data
+from blogs_db_storage import get_content_from_database,process_to_store_data,is_url_valid
 
 st.markdown("""
     <style>
@@ -48,32 +48,36 @@ def func():
     if st.button("Start Updating Blog",key="Blog_Updater"):
         if st.session_state.tokken == st.secrets['TOKKEN']:
             if st.session_state.keyword_list:
-                my_bar=st.progress(0,text=st.session_state.spinner_status)
-                blog_content_from_db=get_content_from_database(url_input_1,my_bar)
-                scrap_content_response=None
-                if   blog_content_from_db:
-                    my_bar=my_bar.progress(20,text=st.session_state.spinner_status)
-                    update_content_only=True
-                else :
-                    my_bar.progress(12,text="crawling start....")
-                    scrap_content_response=crawl_data(url_input_1)
-                    my_bar.progress(20,text=st.session_state.spinner_status)
-                    update_content_only=False
-                           
-                if blog_content_from_db or scrap_content_response :
-                    response=content_cleaner_and_content_enhancer(blog_content_from_db,scrap_content_response,list_keyword,my_bar,update_content_only)
-                    time.sleep(0.5)
-                    with st.container(border=True):
-                        my_bar.progress(90,text="Writing ..")    
-                        placeholder=st.empty()
-                        for chunk in response:
-                            if bool(chunk):
-                                time.sleep(0.02)
-                                placeholder.markdown(chunk["changed_content"] + "▌")
-                        # st.snow()       
-                        my_bar.progress(100,text="Succesfully Done")
+                is_valid=is_url_valid(url_input_1)
+                if is_valid:
+                    my_bar=st.progress(0,text=st.session_state.spinner_status)
+                    blog_content_from_db=get_content_from_database(url_input_1,my_bar)
+                    scrap_content_response=None
+                    if   blog_content_from_db:
+                        my_bar=my_bar.progress(20,text=st.session_state.spinner_status)
+                        update_content_only=True
+                    else :
+                        my_bar.progress(12,text="crawling start....")
+                        scrap_content_response=crawl_data(url_input_1)
+                        my_bar.progress(20,text=st.session_state.spinner_status)
+                        update_content_only=False
+                            
+                    if blog_content_from_db or scrap_content_response :
+                        response=content_cleaner_and_content_enhancer(blog_content_from_db,scrap_content_response,list_keyword,my_bar,update_content_only)
+                        time.sleep(0.5)
+                        with st.container(border=True):
+                            my_bar.progress(90,text="Writing ..")    
+                            placeholder=st.empty()
+                            for chunk in response:
+                                if bool(chunk):
+                                    time.sleep(0.02)
+                                    placeholder.markdown(chunk["changed_content"] + "▌")
+                            # st.snow()       
+                            my_bar.progress(100,text="Succesfully Done")
+                    else:
+                        my_bar.progress(0,text="Failed ! Try again .")
                 else:
-                    my_bar.progress(0,text="Failed ! Try again .")
+                    st.warning("Invalid Url ",icon="⚠️")
             else: 
                 st.warning("Please Upload File to extract Keywords",icon="⚠️")
         elif st.session_state.tokken is None or st.session_state.tokken=="" :

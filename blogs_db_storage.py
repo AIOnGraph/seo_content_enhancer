@@ -8,7 +8,7 @@ from langchain_community.vectorstores.pinecone import Pinecone
 import requests
 import streamlit as st
 from bs4 import BeautifulSoup
-
+import re
 
 def extract_urls_from_excel(file_path):
     df = pd.read_excel(file_path)
@@ -69,6 +69,13 @@ def crawl_data_using_urlslist(list_of_urls, my_bar):
         return dict_of_scraped_content
     except Exception:
         return None
+    
+    
+def is_url_valid(url):
+    url_pattern = re.compile(r'^https?://(?:www\.)?\S+$')
+    match = re.match(url_pattern, url)
+    return bool(match)
+
 
 
 def process_to_store_data(url, my_bar):
@@ -86,10 +93,10 @@ def process_to_store_data(url, my_bar):
 
 
 def get_content_from_database(url_input_1, my_bar):
+    query = url_input_1
     index_name = 'blogurlcontent'
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     docsearch = Pinecone.from_existing_index(index_name, embeddings)
-    query = url_input_1
     docs = docsearch.similarity_search(query, k=1)
     st.session_state.spinner_status = "Searching in database"
     print(docs[0].metadata)
