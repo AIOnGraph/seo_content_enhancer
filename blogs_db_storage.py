@@ -10,6 +10,7 @@ import streamlit as st
 from bs4 import BeautifulSoup
 import re
 
+
 def extract_urls_from_excel(file_path):
     df = pd.read_excel(file_path)
     try:
@@ -69,13 +70,12 @@ def crawl_data_using_urlslist(list_of_urls, my_bar):
         return dict_of_scraped_content
     except Exception:
         return None
-    
-    
+
+
 def is_url_valid(url):
-    url_pattern = re.compile(r'^https?://(?:www\.)?\S+$')
+    url_pattern = re.compile(r'^https?://www\.\S+$')
     match = re.match(url_pattern, url)
     return bool(match)
-
 
 
 def process_to_store_data(url, my_bar):
