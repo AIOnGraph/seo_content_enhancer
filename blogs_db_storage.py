@@ -25,7 +25,7 @@ def extract_urls_from_excel(file_path):
 def text_splitter_and_store_in_db(dict_of_scraped_content, my_bar):
     for url, blog_content in dict_of_scraped_content.items():
         my_bar.progress(60, text="Processing Content ...")
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        text_splitter = CharacterTextSplitter(separator="\n\n\n\n",chunk_size=1000, chunk_overlap=0)
         document = text_splitter.create_documents(
             texts=[blog_content], metadatas=[{"origin": url}])
         docs = text_splitter.split_documents(document)
