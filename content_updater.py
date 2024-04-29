@@ -1,4 +1,4 @@
-from instruction import instruction_for_cleaning_test, instruction_For_Bot, instruction_For_Bot_2, instruction_for_cleaning, test_instruction_for_enhancing_blog
+from instruction import instruction_for_cleaning_test, instruction_for_cleaning, instruction_for_enhancing_blog
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 import pandas as pd
@@ -19,15 +19,9 @@ class ContentEnhancer(BaseModel):
         description="thid field contains the updated content")
 
 
-def clean_content_data(response_after_scrapping):
-    response = re.sub(
-        r'http\S+', '', response_after_scrapping[0].page_content, flags=re.MULTILINE)
-    print(response)
-    return response
 
 
 def crawl_data(url):
-    print("Extracting blog from url")
     try:
         response = requests.get(url)
         html_content = response.text
@@ -53,52 +47,7 @@ def extract_keywords_from_excel(fileName, keyword_difficulty_score, keyword_volu
         return None
 
 
-def compare_contents(blog_1_content, blog_2_content):
-    user_data = f"""First Blog is {blog_1_content},Second Blog {blog_2_content}
-"""
-    messages = [
-        SystemMessage(
-            content=instruction_For_Bot
-        ),
-        HumanMessage(
-            content=user_data
-        )]
-    chat = ChatOpenAI(model="gpt-4", temperature=0.0,
-                      api_key=OPEN_AI_API, verbose=True)
-    response = chat(messages)
-    return response
 
-
-def augment_data_using_keywords(blog_1_content, keywords_list, chat):
-    user_data = f"""Blog Content = {blog_1_content} and keyword_list={keywords_list}"""
-    messages = [
-        SystemMessage(
-            content=test_instruction_for_enhancing_blog
-        ),
-        HumanMessage(
-            content=user_data
-        )]
-    # chat = ChatOpenAI(model="gpt-3.5-turbo-1106",streaming=True,temperature=0.2,api_key=OPEN_AI_API,callbacks=[StreamlitCallbackHandler(response)])
-    chat.invoke(messages)
-
-    # return response
-
-
-def augment_data_using_keywords_test(keywords_list,):
-    user_data = f"""Blog Content = "" and keyword_list={keywords_list}"""
-
-    messages = [
-        SystemMessage(
-            content=instruction_For_Bot_2
-        ),
-        HumanMessage(
-            content=user_data
-        )]
-    chat = ChatOpenAI(model="gpt-3.5-turbo-1106",
-                      temperature=0.2, api_key=OPEN_AI_API)
-    response = chat.invoke(messages)
-
-    return response
 
 
 def clean_scraped_data_using_openai(dict_of_scraped_content, my_bar, url):
@@ -118,9 +67,7 @@ def clean_scraped_data_using_openai(dict_of_scraped_content, my_bar, url):
         model="gpt-4-32k", temperature=0.2, api_key=OPEN_AI_API)
     llm = short_llm.with_fallbacks([long_llm])
     response = llm.invoke(messages)
-    print(response)
     dict_of_scraped_content[url] = response.content
-    print(dict_of_scraped_content)
     my_bar.progress(35, text="Content Cleaned")
     return dict_of_scraped_content
 
@@ -141,8 +88,8 @@ def content_cleaner_and_content_enhancer(blog_content_from_db, user_data_for_cle
 
         parser = JsonOutputParser(pydantic_object=ContentEnhancer)
 
-        enhance_content_template = PromptTemplate(input_variables=["test_instruction_for_enhancing_blog", "user_data_for_enhancing"],
-                                                  template="{test_instruction_for_enhancing_blog} {user_data_for_enhancing}", partial_variables={"format_instructions": parser.get_format_instructions()})
+        enhance_content_template = PromptTemplate(input_variables=["instruction_for_enhancing_blog", "user_data_for_enhancing"],
+                                                  template="{instruction_for_enhancing_blog} {user_data_for_enhancing}", partial_variables={"format_instructions": parser.get_format_instructions()})
 
         # llm model
         llm_model = ChatOpenAI(
@@ -163,19 +110,18 @@ def content_cleaner_and_content_enhancer(blog_content_from_db, user_data_for_cle
         st.session_state.spinner_status = "Content Updating ..."
         my_bar.progress(60, text=st.session_state.spinner_status)
         stream_object = enhance_content_chain.stream(
-            {"test_instruction_for_enhancing_blog": test_instruction_for_enhancing_blog, "user_data_for_enhancing": user_data_for_enhancing})
+            {"instruction_for_enhancing_blog": instruction_for_enhancing_blog, "user_data_for_enhancing": user_data_for_enhancing})
         return stream_object
 
 
 def content_enhancer(cleaned_content_data_from_db, keywords_list):
     parser = JsonOutputParser(pydantic_object=ContentEnhancer)
-    print("gfsgdfgfdgy")
-    enhance_content_template = PromptTemplate(input_variables=["test_instruction_for_enhancing_blog", "user_data_for_enhancing"],
-                                              template="{test_instruction_for_enhancing_blog} {user_data_for_enhancing}", partial_variables={"format_instructions": parser.get_format_instructions()})
+    enhance_content_template = PromptTemplate(input_variables=["instruction_for_enhancing_blog", "user_data_for_enhancing"],
+                                              template="{instruction_for_enhancing_blog} {user_data_for_enhancing}", partial_variables={"format_instructions": parser.get_format_instructions()})
     user_data_for_enhancing = f"""Blog Content = {cleaned_content_data_from_db} and keyword_list={keywords_list}"""
     llm_model = ChatOpenAI(
         model="gpt-4-0613", temperature=0.2, api_key=OPEN_AI_API)
     enhance_content_chain = enhance_content_template | llm_model | parser
     stream_object = enhance_content_chain.stream(
-        {"test_instruction_for_enhancing_blog": test_instruction_for_enhancing_blog, "user_data_for_enhancing": user_data_for_enhancing})
+        {"instruction_for_enhancing_blog": instruction_for_enhancing_blog, "user_data_for_enhancing": user_data_for_enhancing})
     return stream_object

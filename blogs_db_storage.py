@@ -16,7 +16,6 @@ def extract_urls_from_excel(file_path):
     try:
         urls = df['URL'].loc[:1]
         list_of_urls = list(urls)
-        print(list_of_urls)
         return list_of_urls
     except KeyError as e:
         return None
@@ -44,21 +43,13 @@ def store_data_in_pinecone(document, my_bar):
     return "Successfully Uploaded"
 
 
-def search_similar():
-    index_name = 'blogurlcontent'
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    docsearch = Pinecone.from_existing_index(index_name, embeddings)
-    query = "https://www.ongraph.com/market-research-software-tools-for-survey-creation/"
-    docs = docsearch.similarity_search(query, k=1)
-    print(docs[0].page_content)
+
 
 
 def crawl_data_using_urlslist(list_of_urls, my_bar):
     dict_of_scraped_content = {}
-    print(list_of_urls)
     try:
         for url in list_of_urls:
-            print(f"crawling url----{url}")
             response = requests.get(url)
             html_content = response.text
             soup = BeautifulSoup(html_content, 'html.parser')
@@ -99,7 +90,6 @@ def get_content_from_database(url_input_1, my_bar):
     docsearch = Pinecone.from_existing_index(index_name, embeddings)
     docs = docsearch.similarity_search(query, k=1)
     st.session_state.spinner_status = "Searching in database"
-    print(docs[0].metadata)
     if docs[0].metadata["origin"] == query:
         st.session_state.spinner_status = "Hurray ! Found the content.. "
         my_bar.progress(15, text=st.session_state.spinner_status)

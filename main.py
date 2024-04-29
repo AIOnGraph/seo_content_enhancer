@@ -48,32 +48,32 @@ with st.sidebar:
 
 def func():
     update_content_only = None
-    url_input_1 = st.text_input(label="Extract Data", placeholder='Paste Blog Url Here',
+    url_input = st.text_input(label="Extract Data", placeholder='Paste Blog Url Here',
                                 key="text_input_1", label_visibility="collapsed")
     if st.button("Start Updating Blog", key="Blog_Updater"):
         if st.session_state.tokken == st.secrets['TOKKEN']:
             if st.session_state.keyword_list:
-                is_valid = is_url_valid(url_input_1)
+                is_valid = is_url_valid(url_input)
                 if is_valid:
                     my_bar = st.progress(
                         0, text=st.session_state.spinner_status)
                     blog_content_from_db = get_content_from_database(
-                        url_input_1, my_bar)
-                    scrap_content_response = None
+                        url_input, my_bar)
+                    scraped_content_response = None
                     if blog_content_from_db:
                         my_bar = my_bar.progress(
                             20, text=st.session_state.spinner_status)
                         update_content_only = True
                     else:
                         my_bar.progress(12, text="crawling start....")
-                        scrap_content_response = crawl_data(url_input_1)
+                        scraped_content_response = crawl_data(url_input)
                         my_bar.progress(
                             20, text=st.session_state.spinner_status)
                         update_content_only = False
 
-                    if blog_content_from_db or scrap_content_response:
+                    if blog_content_from_db or scraped_content_response:
                         response = content_cleaner_and_content_enhancer(
-                            blog_content_from_db, scrap_content_response, list_keyword, my_bar, update_content_only)
+                            blog_content_from_db, scraped_content_response, list_keyword, my_bar, update_content_only)
                         time.sleep(0.5)
                         with st.container(border=True):
                             my_bar.progress(90, text="Writing ..")
@@ -83,7 +83,6 @@ def func():
                                     time.sleep(0.02)
                                     placeholder.markdown(
                                         chunk["changed_content"] + "▌")
-                            # st.snow()
                             my_bar.progress(100, text="Succesfully Done")
                     else:
                         my_bar.progress(0, text="Failed ! Try again .")
